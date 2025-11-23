@@ -1,26 +1,41 @@
 import streamlit as st
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
-st.title("تحليل بيانات الورشة باستخدام AI")
-st.write("عرض البيانات الحية وتحديثها مباشرة من Google Form")
+# --------------------------
+# إعداد الصفحة
+st.set_page_config(page_title="AI Workshop Dashboard", layout="wide")
+st.title("AI Workshop Live Dashboard")
+st.markdown("تابعوا الردود وتحليلاتها لحظيًا")
 
-# رابط الـ CSV المباشر
-CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
+# --------------------------
+# رابط CSV العام للفورم
+csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
 
-# قراءة البيانات من الإنترنت
-df = pd.read_csv(CSV_URL)
+# قراءة البيانات
+df = pd.read_csv(csv_url)
 
-# عرض جدول ردود المشاركين
-st.subheader("بيانات المشاركين")
+# --------------------------
+# عرض الجدول الكامل
+st.subheader("جدول الردود")
 st.dataframe(df)
 
-# توزيع المشاركين حسب القسم
-st.subheader("عدد المشاركين حسب القسم")
-# تأكّدي أن العمود في CSV اسمه Department
-st.bar_chart(df['Department'].value_counts())
+# --------------------------
+# تحليل المشاريع الأكثر اختيارًا
+if 'ProjectChoice' in df.columns and not df['ProjectChoice'].dropna().empty:
+    most_chosen = df['ProjectChoice'].value_counts().idxmax()
+    st.success(f"المشروع الأكثر اختيارًا: {most_chosen}")
+else:
+    st.warning("لم يتم إدخال أي اختيارات بعد.")
 
-# أكثر مشروع اختيارًا
-st.subheader("المشروع الأكثر اختيارًا")
-# تأكّدي أن العمود في CSV اسمه ProjectChoice
-most_chosen = df['ProjectChoice'].value_counts().idxmax()
-st.write(f"المشروع الأكثر اختيارًا هو: {most_chosen}")
+# --------------------------
+# رسم بياني: عدد الاختيارات لكل مشروع حسب القسم
+if 'Department' in df.columns and 'ProjectChoice' in df.columns:
+    st.subheader("تحليل حسب القسم")
+    plt.figure(figsize=(10,6))
+    sns.countplot(data=df, x='ProjectChoice', hue='Department')
+    plt.xticks(rotation=45)
+    plt.title("عدد الاختيارات لكل مشروع حسب القسم")
+    plt.tight_layout()
+    st.pyplot(plt)
