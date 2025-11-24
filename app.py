@@ -1,63 +1,46 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
+import matplotlib.pyplot as plt
 
-# عنوان التطبيق
-st.title("AI Workshop Dashboard")
-st.markdown("عرض نتائج الاستبيان وتحليل البيانات باستخدام الذكاء الاصطناعي")
-
-# رابط CSV من Google Sheets
+# رابط CSV المنشور من Google Forms/Sheets
 sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
 
-# تحميل البيانات
+# قراءة البيانات
 df = pd.read_csv(sheet_url)
 
-st.subheader("Raw Data")
-st.dataframe(df)  # عرض الجدول الأولي
+# عنوان التطبيق
+st.title("Workshop AI Dashboard")
 
-# Mapping لمستوى الذكاء الاصطناعي
-mapping_ai = {
-    "بسيط": "Basic",
-    "متوسط": "Intermediate",
-    "متقدم": "Advanced"
-}
+# عرض البيانات كجدول
+st.subheader("Raw Data / البيانات الأولية")
+st.dataframe(df)
 
-# التحقق من العمود AILevel
+# عرض مستوى المعرفة بالذكاء الاصطناعي
+st.subheader("AI Knowledge Level / مستوى المعرفة بالذكاء الاصطناعي")
 if 'AILevel' in df.columns:
-    df['AI_Level_EN'] = df['AILevel'].map(mapping_ai)
+    ai_counts = df['AILevel'].value_counts()
+    fig, ax = plt.subplots()
+    ai_counts.plot(kind='bar', color=['lightgreen', 'gold', 'tomato'], ax=ax)
+    ax.set_ylabel("Count / العدد")
+    ax.set_xlabel("AI Level / مستوى الذكاء الاصطناعي")
+    ax.set_title("Participants by AI Knowledge Level / المشاركون حسب مستوى المعرفة")
+    st.pyplot(fig)
 else:
-    st.warning("عمود AILevel غير موجود!")
+    st.warning("Column 'AILevel' not found in the sheet / عمود 'AILevel' غير موجود.")
 
-# تحليل أكثر مشروع تم اختياره
+# عرض شارت لخيارات المشاريع
+st.subheader("Project Choices / اختيارات المشاريع")
 if 'ProjectChoice' in df.columns:
-    if df['ProjectChoice'].dropna().empty:
-        most_chosen_project = "لا توجد بيانات كافية"
-    else:
-        most_chosen_project = df['ProjectChoice'].dropna().value_counts().idxmax()
-    st.subheader("Most Chosen Project")
-    st.write(f"**{most_chosen_project}**")
+    project_counts = df['ProjectChoice'].value_counts()
+    fig2, ax2 = plt.subplots()
+    project_counts.plot(kind='bar', color='skyblue', ax=ax2)
+    ax2.set_ylabel("Count / العدد")
+    ax2.set_xlabel("Projects / المشاريع")
+    ax2.set_title("Number of participants per project / عدد المشاركين لكل مشروع")
+    st.pyplot(fig2)
 else:
-    st.warning("عمود ProjectChoice غير موجود!")
+    st.warning("Column 'ProjectChoice' not found in the sheet / عمود 'ProjectChoice' غير موجود.")
 
-# رسم شارت لمستوى الذكاء الاصطناعي
-if 'AI_Level_EN' in df.columns:
-    st.subheader("AI Knowledge Level Distribution")
-    chart_ai = alt.Chart(df).mark_bar().encode(
-        x=alt.X('AI_Level_EN', sort=None, title='AI Level'),
-        y=alt.Y('count()', title='Number of Respondents'),
-        color='AI_Level_EN'
-    )
-    st.altair_chart(chart_ai, use_container_width=True)
-
-# رسم شارت لمشاريع الاستبيان
-if 'ProjectChoice' in df.columns and not df['ProjectChoice'].dropna().empty:
-    st.subheader("Project Choice Distribution")
-    chart_proj = alt.Chart(df.dropna(subset=['ProjectChoice'])).mark_bar().encode(
-        x=alt.X('ProjectChoice', sort=None, title='Project'),
-        y=alt.Y('count()', title='Number of Respondents'),
-        color='ProjectChoice'
-    )
-    st.altair_chart(chart_proj, use_container_width=True)
 
 
 
