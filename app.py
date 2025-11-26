@@ -55,12 +55,3 @@ st.subheader("Summary")
 st.write(f"Total Participants: {len(df)}")
 st.write(f"Most common AI Level: {df['AI_Level_EN'].mode()[0] if not df.empty else 'No data'}")
 st.write(f"Most chosen Project: {df['ProjectChoice_EN'].mode()[0] if not df.empty else 'No data'}")
-
-
-
-
-
-
-
-
-
