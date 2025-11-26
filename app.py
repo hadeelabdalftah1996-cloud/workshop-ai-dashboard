@@ -1,57 +1,74 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import altair as alt
 
-# --- Settings ---
 st.set_page_config(page_title="AI Workshop Dashboard", layout="wide")
+
+# Google Sheet CSV
+csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
+
+df = pd.read_csv(csv_url)
+
 st.title("AI Workshop Dashboard")
 
-# --- Load Data ---
-DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
-
-df = pd.read_csv(DATA_URL)
-
+# -----------------------------
+# 1) عرض البيانات
+# -----------------------------
 st.subheader("Raw Data")
 st.dataframe(df)
 
-# --- Map Arabic to English for chart ---
+# -----------------------------
+# 2) تحويل قيم AILevel إلى إنجليزي
+# -----------------------------
 mapping_ai = {
-    "مبتدئ": "Beginner",
-    "متوسط": "Intermediate",
-    "متقدم": "Advanced"
+    "بسيطة": "Basic",
+    "متوسطة": "Intermediate",
+    "متقدمة": "Advanced"
 }
 
-mapping_projects = {
-    "التنبؤ بالأعطال والصيانة التنبؤية للمحطات والمعدات": "Predictive Maintenance",
-    "كشف ارتداء معدات السلامة الشخصية تلقائياً": "Safety Gear Detection",
-    "التنبؤ بالاحتياجات من المياه": "Water Demand Forecast"
-}
+# إذا القيم عربي → ترجم
+df["AI_Level_EN"] = df["AILevel"].map(mapping_ai)
 
-df['AI_Level_EN'] = df['AILevel'].map(mapping_ai)
-df['ProjectChoice_EN'] = df['ProjectChoice'].map(mapping_projects)
+# -----------------------------
+# 3) شارت مستوى الذكاء الاصطناعي
+# -----------------------------
+st.subheader("AI Knowledge Level Distribution")
 
-# --- AI Level Chart ---
-st.subheader("AI Knowledge Level")
-fig1, ax1 = plt.subplots()
-sns.countplot(x='AI_Level_EN', data=df, palette="Set2", ax=ax1)
-ax1.set_xlabel("AI Knowledge Level")
-ax1.set_ylabel("Number of Participants")
-ax1.set_title("Distribution of AI Knowledge Level")
-st.pyplot(fig1)
+if df["AI_Level_EN"].notna().sum() > 0:
+    ai_chart = (
+        alt.Chart(df)
+        .mark_bar()
+        .encode(
+            x=alt.X("AI_Level_EN:N", title="AI Knowledge Level"),
+            y=alt.Y("count()", title="Number of Participants"),
+            color="AI_Level_EN:N"
+        )
+        .properties(height=400)
+    )
+    st.altair_chart(ai_chart, use_container_width=True)
+else:
+    st.write("No AI Level data available.")
 
-# --- Project Choice Chart ---
-st.subheader("Preferred Project to Implement")
-fig2, ax2 = plt.subplots()
-sns.countplot(x='ProjectChoice_EN', data=df, palette="Set3", ax=ax2)
-ax2.set_xlabel("Project")
-ax2.set_ylabel("Number of Participants")
-ax2.set_title("Most Chosen Project")
-plt.xticks(rotation=30)
-st.pyplot(fig2)
+# -----------------------------
+# 4) شارت اختيار المشروع
+# -----------------------------
+st.subheader("Most Selected Project")
 
-# --- Summary ---
-st.subheader("Summary")
-st.write(f"Total Participants: {len(df)}")
-st.write(f"Most common AI Level: {df['AI_Level_EN'].mode()[0] if not df.empty else 'No data'}")
-st.write(f"Most chosen Project: {df['ProjectChoice_EN'].mode()[0] if not df.empty else 'No data'}")
+if df["ProjectChoice"].notna().sum() > 0:
+    project_chart = (
+        alt.Chart(df)
+        .mark_bar()
+        .encode(
+            x=alt.X("ProjectChoice:N", title="Project Type"),
+            y=alt.Y("count()", title="Number of Votes"),
+            color="ProjectChoice:N"
+        )
+        .properties(height=400)
+    )
+    st.altair_chart(project_chart, use_container_width=True)
+
+    # إظهار الأكثر اختياراً
+    st.write(f"Most chosen project: **{df['ProjectChoice'].mode()[0]}**")
+else:
+    st.write("No project choice data available.")
+
