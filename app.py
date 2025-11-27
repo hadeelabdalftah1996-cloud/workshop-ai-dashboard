@@ -5,7 +5,8 @@ import plotly.express as px
 # -------------------------
 # إعداد الصفحة
 # -------------------------
-st.set_page_config(page_title="SEPCO AI Workshop Dashboard", layout="wide")
+st.set_page_config(page_title="🤖 SEPCO AI Workshop Dashboard", layout="wide")
+
 
 # شعار واسم الشركة
 st.image("logo.jpg", width=120)
@@ -87,6 +88,7 @@ else:
 
 st.markdown(f"**Most common AI Level:** {most_common_ai}")
 st.markdown(f"**Most chosen Project:** {most_common_project}")
+
 
 
 
