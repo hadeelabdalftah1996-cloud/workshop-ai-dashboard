@@ -42,8 +42,8 @@ project_mapping = {
     "تحليل وبناء FMEA": "📊 تحليل وبناء FMEA",
     "تحليل الأعطال والتوقفات": "⚡ تحليل الأعطال والتوقفات",
     "مساعد للمشغل والمهندس": "🤖 مساعد للمشغل والمهندس",
-    "Access control to data centers": "🔐 Access control to data centers",
-    "Procurement planning": "📦 Procurement planning"
+    "التحكم بالوصول الى مراكز البيانات ": "🔐 Access control to data centers",
+    "تخطيط المشتريات": "📦 Procurement planning"
 }
 
 # --- Projects Pie Chart ---
@@ -84,3 +84,5 @@ if not df_ai_clean.empty:
     st.markdown(f"**Most common AI knowledge level:** {most_common_ai}")
 else:
     st.warning("Cannot calculate most common AI level.")
+
+
