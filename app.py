@@ -57,6 +57,25 @@ if not df.empty:
 else:
     st.warning("No AILevel data available!")
 
+# ---------- Pie Chart لمستوى AI ----------
+if not df.empty:
+    fig_ai = px.pie(
+        df,
+        names="AI_Level_EN",
+        title="AI Knowledge Level Distribution",
+        color_discrete_sequence=['#2ca02c','#ff7f0e','#1f77b4'],
+        hole=0.4
+    )
+    fig_ai.update_traces(
+        textposition='inside',
+        textinfo='percent+label',
+        pull=[0.05]*len(df["AI_Level_EN"].unique()),
+        textfont_size=20   # <<-- هنا حطينا حجم الخط
+    )
+    st.plotly_chart(fig_ai, use_container_width=True)
+else:
+    st.warning("No AILevel data available!")
+
 # ---------- Pie Chart للمشاريع ----------
 if not df.empty:
     project_counts = df['Project_EN'].value_counts()
@@ -67,10 +86,16 @@ if not df.empty:
         color_discrete_sequence=px.colors.qualitative.Set3,
         hole=0.4
     )
-    fig_proj.update_traces(textposition='inside', textinfo='percent+label', pull=[0.05]*len(project_counts))
+    fig_proj.update_traces(
+        textposition='inside',
+        textinfo='percent+label',
+        pull=[0.05]*len(project_counts),
+        textfont_size=20   # <<-- هنا كمان حجم الخط
+    )
     st.plotly_chart(fig_proj, use_container_width=True)
 else:
     st.warning("No ProjectChoice data available!")
+
 
 # ---------- Table مع الإجابات ----------
 st.write("### Detailed Responses")
@@ -78,6 +103,7 @@ if not df.empty:
     st.dataframe(df[["AILevel", "AI_Level_EN", "ProjectChoice", "Project_EN"]])
 else:
     st.info("No responses yet.")
+
 
 
 
