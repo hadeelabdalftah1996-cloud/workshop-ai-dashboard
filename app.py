@@ -1,57 +1,86 @@
+# app.py
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# --- Header ---
-st.set_page_config(page_title="SEPCO AI Workshop Dashboard", layout="wide")
-st.markdown("<h1 style='text-align:center; color: #1F77B4;'>🤖 SEPCO AI Workshop Responses</h1>", unsafe_allow_html=True)
-st.image("logo.jpg", width=200)
+# --- Page Configuration ---
+st.set_page_config(page_title="SEPCO AI Workshop", layout="wide")
 
-# --- Load data from Google Sheet CSV link ---
-url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
-df = pd.read_csv(url)
+# --- Header with logo ---
+st.markdown(
+    """
+    <div style="display:flex; align-items:center;">
+        <img src="logo.jpg" width="80" style="margin-right:20px;">
+        <h1 style="color:#2E86C1;">🤖 SEPCO AI Workshop Dashboard</h1>
+    </div>
+    """, unsafe_allow_html=True
+)
 
-# --- Map AI Levels to English + Emoji ---
+# --- Google Sheet CSV Link ---
+sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
+df = pd.read_csv(sheet_url)
+
+# --- Mapping AI Levels to Emojis ---
 mapping_ai = {
-    "معرفة بسيطة": "Basic 🟢",
-    "معرفة متوسطة": "Intermediate 🟡",
-    "معرفة متقدمة": "Advanced 🔵"
+    "معرفة بسيطة": "Basic → 🟢",
+    "معرفة متوسطة": "Intermediate → 🟡",
+    "معرفة متقدمة": "Advanced → 🔵"
 }
-df["AI_Level_EN"] = df["AILevel"].map(mapping_ai)
+df['AI_Level_EN'] = df['AILevel'].map(mapping_ai)
 
-# --- Projects mapping with Emoji ---
+# --- Display AI Level Table ---
+st.subheader("AI Knowledge Level Responses")
+if not df.empty:
+    st.dataframe(df[['AILevel', 'AI_Level_EN']])
+else:
+    st.warning("No AI Level data available.")
+
+# --- Projects Mapping with Emojis ---
 project_mapping = {
-    "كتابة وتحديث إجراءات التشغيل sop": "📝 كتابة وتحديث SOP",
-    "تحليل وبناء ال FMEA": "📊 تحليل وبناء FMEA",
-    "تحليل الاعطال والتوقفات القسرية": "⚡ تحليل الأعطال والتوقفات",
+    "كتابة وتحديث SOP": "📝 كتابة وتحديث SOP",
+    "تحليل وبناء FMEA": "📊 تحليل وبناء FMEA",
+    "تحليل الأعطال والتوقفات": "⚡ تحليل الأعطال والتوقفات",
     "مساعد للمشغل والمهندس": "🤖 مساعد للمشغل والمهندس",
-    "Access control to data centers": "🔐 Access control",
+    "Access control to data centers": "🔐 Access control to data centers",
     "Procurement planning": "📦 Procurement planning"
 }
-df["ProjectChoice_EN"] = df["ProjectChoice"].map(project_mapping)
-
-# --- Display Data Table ---
-st.subheader("Responses Table")
-st.dataframe(df[["AI_Level_EN", "ProjectChoice_EN"]])
-
-# --- AI Level Pie Chart ---
-st.subheader("AI Knowledge Levels")
-fig_ai = px.pie(
-    df,
-    names='AI_Level_EN',
-    values=df['AI_Level_EN'].value_counts(),
-    color_discrete_sequence=px.colors.sequential.RdBu
-)
-fig_ai.update_traces(textinfo='label+percent', textfont_size=18)
-st.plotly_chart(fig_ai, use_container_width=True)
 
 # --- Projects Pie Chart ---
 st.subheader("Project Preference")
-fig_proj = px.pie(
-    df,
-    names='ProjectChoice_EN',
-    values=df['ProjectChoice_EN'].value_counts(),
-    color_discrete_sequence=px.colors.qualitative.Set3
-)
-fig_proj.update_traces(textinfo='label+percent', textfont_size=16)
-st.plotly_chart(fig_proj, use_container_width=True)
+df['ProjectChoice_EN'] = df['ProjectChoice'].map(project_mapping)
+df_proj_clean = df.dropna(subset=['ProjectChoice_EN'])
+
+if not df_proj_clean.empty:
+    fig_proj = px.pie(
+        df_proj_clean,
+        names='ProjectChoice_EN',
+        values=df_proj_clean['ProjectChoice_EN'].value_counts(),
+        color_discrete_sequence=px.colors.qualitative.Set3
+    )
+    fig_proj.update_traces(textinfo='label+percent', textfont_size=16)
+    st.plotly_chart(fig_proj, use_container_width=True)
+else:
+    st.warning("No valid project data to display.")
+
+# --- AI Level Pie Chart ---
+st.subheader("AI Knowledge Distribution")
+df_ai_clean = df.dropna(subset=['AI_Level_EN'])
+if not df_ai_clean.empty:
+    fig_ai = px.pie(
+        df_ai_clean,
+        names='AI_Level_EN',
+        values=df_ai_clean['AI_Level_EN'].value_counts(),
+        color_discrete_sequence=['#2ECC71', '#F1C40F', '#3498DB']
+    )
+    fig_ai.update_traces(textinfo='label+percent', textfont_size=16)
+    st.plotly_chart(fig_ai, use_container_width=True)
+else:
+    st.warning("No AI Level data to display.")
+
+# --- Most Common AI Level ---
+if not df_ai_clean.empty:
+    most_common_ai = df_ai_clean['AI_Level_EN'].mode()[0]
+    st.markdown(f"**Most common AI knowledge level:** {most_common_ai}")
+else:
+    st.warning("Cannot calculate most common AI level.")
