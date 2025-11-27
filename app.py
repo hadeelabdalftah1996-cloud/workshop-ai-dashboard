@@ -1,121 +1,84 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from PIL import Image
 
-# ------------------------  PAGE STYLE  ------------------------
-st.set_page_config(page_title="SEPCO AI Dashboard", page_icon="🤖", layout="wide")
-
-# Load logo
-try:
-    logo = Image.open("logo.jpg")
-    st.image(logo, width=140)
-except:
-    st.warning("⚠️ لم يتم العثور على شعار الشركة (logo.jpg) – تأكدي أنه موجود في نفس مجلد المشروع.")
-
-# Title
-st.markdown(
-    "<h1 style='text-align:center; color:#1F2937;'>SEPCO AI Workshop Dashboard 🤖</h1>",
-    unsafe_allow_html=True,
+# ---------- إعداد الصفحة ----------
+st.set_page_config(
+    page_title="SEPCO Workshop AI Dashboard",
+    page_icon="🤖",
+    layout="wide"
 )
 
-st.markdown("---")
+# شعار الشركة واسمها
+st.image("logo.jpg", width=150)  # تأكدي إن الصورة بنفس مجلد المشروع على GitHub
+st.markdown("<h1 style='text-align: center; color: #2E86C1;'>SEPCO Workshop AI Dashboard</h1>", unsafe_allow_html=True)
+st.write("---")
 
-# ------------------------  LOAD DATA  ------------------------
+# ---------- رابط الشيت ----------
 sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
-   # <<< ضعي رابط الشيت هنا
+
+# قراءة البيانات
 df = pd.read_csv(sheet_url)
 
-# ------------------------  EMOJI MAPPING  ------------------------
-ai_mapping = {
+# ---------- Mapping لمستوى AI ----------
+mapping_ai = {
     "معرفة بسيطة": "Basic 🟢",
     "معرفة متوسطة": "Intermediate 🟡",
-    "معرفة متقدمة": "Advanced 🔵",
+    "معرفة متقدمة": "Advanced 🔵"
 }
+df["AI_Level_EN"] = df["AILevel"].map(mapping_ai)
 
+# ---------- Mapping المشاريع مع إيموجي ----------
 project_mapping = {
-    "كتابة وتحديث إجراءات التشغيل SOP": "📝 Writing & Updating SOP",
-    "تحليل وبناء FMEA": "📊 FMEA Analysis & Building",
-    "تحليل الأعطال والتوقفات القسرية": "⚡ Fault & Forced-Outage Analysis",
-    "مساعد للمشغل والمهندس": "🤖 Ops & Maintenance Copilot",
-    "التحكم بالوصول إلى مراكز البيانات": "🔐 Access Control to Data Centers",
-    "تخطيط المشتريات": "📦 Procurement Planning",
+    "كتابة وتحديث إجراءات التشغيل sop": "Writing & Updating SOP 📝",
+    "تحليل وبناء ال FMEA": "FMEA Analysis 📊",
+    "تحليل الأعطال والتوقفات القسرية": "Failure & Downtime Analysis ⚡",
+    "مساعد للمشغل والمهندس": "Ops & Maintenance Copilot 🤖",
+    "التحكم بالوصول الى مراكز البيانات": "Access Control 🔐",
+    "تخطيط المشتريات": "Procurement Planning 📦"
 }
-
-# Apply mapping
-df["AILevel_EN"] = df["AILevel"].map(ai_mapping)
 df["Project_EN"] = df["ProjectChoice"].map(project_mapping)
 
-# ------------------------  SECTION: AI Level  ------------------------
-st.markdown("## 🤖 مستوى المعرفة بالذكاء الاصطناعي")
+# ---------- Sidebar Summary ----------
+st.sidebar.header("Summary")
+st.sidebar.write(f"Total Responses: {len(df)}")
 
-if df["AILevel_EN"].notna().any():
-
-    # Count values
-    ai_counts = df["AILevel_EN"].value_counts()
-    ai_df = ai_counts.reset_index()
-    ai_df.columns = ["AI Level", "Count"]
-
-    # Pie Chart
+# ---------- Pie Chart لمستوى AI ----------
+if not df.empty:
     fig_ai = px.pie(
-        ai_df,
-        names="AI Level",
-        values="Count",
-        title="AI Knowledge Levels",
-        hole=0.45,
-        color_discrete_sequence=["#2ecc71", "#f1c40f", "#3498db"]
+        df,
+        names="AI_Level_EN",
+        title="AI Knowledge Level Distribution",
+        color_discrete_sequence=['#2ca02c','#ff7f0e','#1f77b4'],
+        hole=0.4
     )
-    fig_ai.update_traces(textinfo="percent+label")
-
+    fig_ai.update_traces(textposition='inside', textinfo='percent+label', pull=[0.05]*len(df["AI_Level_EN"].unique()))
     st.plotly_chart(fig_ai, use_container_width=True)
-
-    # Show answers as text
-    st.markdown("### 📋 جميع الإجابات:")
-    for val, count in ai_counts.items():
-        st.markdown(f"- **{val}** → ({count})")
-
 else:
-    st.info("لا توجد بيانات لهذا السؤال.")
+    st.warning("No AILevel data available!")
 
-st.markdown("---")
-
-# ------------------------  SECTION: Project Choice  ------------------------
-st.markdown("## 📌 المشاريع المختارة")
-
-if df["Project_EN"].notna().any():
-
-    # Count values
-    proj_counts = df["Project_EN"].value_counts()
-    proj_df = proj_counts.reset_index()
-    proj_df.columns = ["Project", "Count"]
-
-    # Pie Chart
+# ---------- Pie Chart للمشاريع ----------
+if not df.empty:
+    project_counts = df['Project_EN'].value_counts()
     fig_proj = px.pie(
-        proj_df,
-        names="Project",
-        values="Count",
-        title="Selected Projects Distribution",
-        hole=0.45,
-        color_discrete_sequence=px.colors.qualitative.Set3
+        names=project_counts.index,
+        values=project_counts.values,
+        title="Project Preference Distribution",
+        color_discrete_sequence=px.colors.qualitative.Set3,
+        hole=0.4
     )
-    fig_proj.update_traces(textinfo="percent+label")
-
+    fig_proj.update_traces(textposition='inside', textinfo='percent+label', pull=[0.05]*len(project_counts))
     st.plotly_chart(fig_proj, use_container_width=True)
-
-    # Show answers as text
-    st.markdown("### 📋 جميع الإجابات:")
-    for val, count in proj_counts.items():
-        st.markdown(f"- **{val}** → ({count})")
-
 else:
-    st.info("لا توجد بيانات لهذا السؤال.")
+    st.warning("No ProjectChoice data available!")
 
-st.markdown("---")
+# ---------- Table مع الإجابات ----------
+st.write("### Detailed Responses")
+if not df.empty:
+    st.dataframe(df[["AILevel", "AI_Level_EN", "ProjectChoice", "Project_EN"]])
+else:
+    st.info("No responses yet.")
 
-st.markdown(
-    "<p style='text-align:center; color:#6B7280;'>Dashboard by SEPCO © 2025</p>",
-    unsafe_allow_html=True,
-)
 
 
 
