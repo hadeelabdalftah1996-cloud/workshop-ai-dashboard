@@ -2,50 +2,86 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# --- إعداد الصفحة ---
-st.set_page_config(page_title="SEPCO AI Workshop Dashboard", layout="wide")
+# ---- واجهة ----
+st.set_page_config(page_title="SEPCO AI Workshop Dashboard", page_icon="🤖", layout="wide")
 
-# --- اسم الشركة وشعارها ---
-st.image("logo.jpg", width=150)  # ضع اسم ملف الشعار بالضبط كما على GitHub
-st.title("Welcome to SEPCO AI Workshop 🚀")
+# شعار الشركة
+st.image("logo.jpg", width=200)
 
-# --- رابط البيانات ---
-DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
+# عنوان
+st.markdown("## Welcome to SEPCO AI Workshop Dashboard 🤖📊")
+st.markdown("### Real-time Responses Analysis")
 
-# --- قراءة البيانات ---
-@st.cache_data
-def load_data(url):
-    df = pd.read_csv(url)
-    return df
+# ---- رابط البيانات ----
+data_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
 
-df = load_data(DATA_URL)
+# ---- تحميل البيانات ----
+df = pd.read_csv(data_url)
 
-# --- عرض البيانات إذا موجودة ---
+# ---- التأكد من الأعمدة ----
+expected_cols = ["AILevel", "ProjectChoice"]
+for col in expected_cols:
+    if col not in df.columns:
+        st.error(f"Column '{col}' is missing from the data!")
+        st.stop()
+
+# ---- تعيين ألوان للإيموجي ----
+ai_mapping = {
+    "Simple 😎": "Simple",
+    "Intermediate 🤓": "Intermediate",
+    "Advanced 🤖": "Advanced"
+}
+
+# تطبيق الترجمة للإنجليزية للشارت
+df["AI_Level_EN"] = df["AILevel"].map(ai_mapping)
+
+# ---- Project Names مع الإيموجي ----
+project_mapping = {
+    "كتابة وتحديث إجراءات التشغيل sop 📝": "SOP Documentation 📝",
+    "تحليل وبناء ال FMEA ⚙️": "FMEA Analysis ⚙️",
+    "تحليل الاعطال والتوقفات القسرية 🔧": "Failure & Downtime Analysis 🔧",
+    "مساعد للمشغل والمهندس ops & maintenance copilot 🤝": "Ops & Maintenance Copilot 🤝",
+    "التحكم بالوصول لمراكز البيانات 🔐": "Access Control to Data Centers 🔐",
+    "تخطيط المشتريات 📦": "Procurement Planning 📦"
+}
+
+df["Project_EN"] = df["ProjectChoice"].map(project_mapping)
+
+# ---- جدول البيانات ----
+st.markdown("### Raw Data Table")
+st.dataframe(df)
+
+# ---- شارت مستوى AI ----
+st.markdown("### AI Knowledge Level Distribution")
+fig_ai = px.pie(
+    df,
+    names="AI_Level_EN",
+    title="Distribution of AI Knowledge Levels",
+    color="AI_Level_EN",
+    color_discrete_map={"Simple":"#636EFA", "Intermediate":"#EF553B", "Advanced":"#00CC96"}
+)
+st.plotly_chart(fig_ai, use_container_width=True)
+
+# ---- شارت اختيار المشاريع ----
+st.markdown("### Most Selected Project")
+fig_proj = px.pie(
+    df,
+    names="Project_EN",
+    title="Distribution of Selected Projects",
+    color_discrete_sequence=px.colors.qualitative.Pastel
+)
+st.plotly_chart(fig_proj, use_container_width=True)
+
+# ---- أبرز النتائج ----
+st.markdown("### Key Insights")
 if not df.empty:
-    st.subheader("📊 Responses Table")
-    st.dataframe(df)
-
-    # --- Mapping AI Level to English labels (optional) ---
-    mapping_ai = {
-        "بسيطة": "Basic",
-        "متوسطة": "Intermediate",
-        "متقدمة": "Advanced"
-    }
-
-    if "AILevel" in df.columns:
-        df["AI_Level_EN"] = df["AILevel"].map(mapping_ai)
-        st.write(f"Most common AI Level: {df['AI_Level_EN'].mode()[0]}")
-
-    # --- Charts ---
-    if "AILevel" in df.columns:
-        fig1 = px.pie(df, names="AILevel", title="Knowledge Level of AI 🤖", color_discrete_sequence=px.colors.sequential.Tealrose)
-        st.plotly_chart(fig1, use_container_width=True)
-
-    if "ProjectChoice" in df.columns:
-        fig2 = px.pie(df, names="ProjectChoice", title="Most Preferred Project 📌", color_discrete_sequence=px.colors.sequential.Viridis)
-        st.plotly_chart(fig2, use_container_width=True)
+    most_common_ai = df['AI_Level_EN'].mode()[0]
+    most_chosen_project = df['Project_EN'].mode()[0]
+    st.write(f"Most common AI Level: **{most_common_ai}**")
+    st.write(f"Most chosen Project: **{most_chosen_project}**")
 else:
-    st.warning("No data available yet. Please fill the Google Form responses first!")
+    st.write("No data available yet.")
+
 
 
 
