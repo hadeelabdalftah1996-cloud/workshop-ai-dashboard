@@ -2,82 +2,51 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# -------------------------
-# إعداد الصفحة والواجهة
-# -------------------------
-st.set_page_config(page_title="Workshop AI Dashboard", layout="wide")
-st.title("AI Workshop Dashboard")
+# --- إعداد الصفحة ---
+st.set_page_config(page_title="SEPCO AI Workshop Dashboard", layout="wide")
 
-# عرض شعار الشركة
-st.image("https://raw.githubusercontent.com/USERNAME/REPO/main/logo.png", width=200)
+# --- اسم الشركة وشعارها ---
+st.image("logo.jpg", width=150)  # ضع اسم ملف الشعار بالضبط كما على GitHub
+st.title("Welcome to SEPCO AI Workshop 🚀")
 
-st.markdown("### تحليل إجابات المشاركين على الفورم")
+# --- رابط البيانات ---
+DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
 
-# -------------------------
-# جلب البيانات من Google Sheets (CSV link)
-# -------------------------
-sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
-df = pd.read_csv(sheet_url)
+# --- قراءة البيانات ---
+@st.cache_data
+def load_data(url):
+    df = pd.read_csv(url)
+    return df
 
-# التأكد من الأعمدة وتسميتها
-df.rename(columns={
-    "AILevel": "AILevel",
-    "ProjectChoice": "ProjectChoice"
-}, inplace=True)
+df = load_data(DATA_URL)
 
-# -------------------------
-# تحويل مستويات AI للإنجليزية للعرض
-# -------------------------
-mapping_ai = {
-    "بسيطة": "Basic",
-    "متوسطة": "Intermediate",
-    "متقدمة": "Advanced"
-}
-df["AI_Level_EN"] = df["AILevel"].map(mapping_ai)
+# --- عرض البيانات إذا موجودة ---
+if not df.empty:
+    st.subheader("📊 Responses Table")
+    st.dataframe(df)
 
-# -------------------------
-# ترتيب المشاريع للعرض
-# -------------------------
-project_names_en = {
-    "كتابة وتحديث إجراءات التشغيل sop": "SOP Writing & Update",
-    "تحليل وبناء ال FMEA": "FMEA Analysis & Build",
-    "تحليل الاعطال والتوقفات القسرية": "Failure & Downtime Analysis",
-    "مساعد للمشغل والمهندس ops & maintaenance copilot": "Ops & Maintenance Copilot",
-    "Access control to data centers": "Access Control to Data Centers",
-    "Procurement planning": "Procurement Planning"
-}
+    # --- Mapping AI Level to English labels (optional) ---
+    mapping_ai = {
+        "بسيطة": "Basic",
+        "متوسطة": "Intermediate",
+        "متقدمة": "Advanced"
+    }
 
-df["ProjectChoice_EN"] = df["ProjectChoice"].map(project_names_en)
+    if "AILevel" in df.columns:
+        df["AI_Level_EN"] = df["AILevel"].map(mapping_ai)
+        st.write(f"Most common AI Level: {df['AI_Level_EN'].mode()[0]}")
 
-# -------------------------
-# عرض جدول البيانات
-# -------------------------
-st.subheader("جدول الإجابات")
-st.dataframe(df[["AILevel", "AI_Level_EN", "ProjectChoice", "ProjectChoice_EN"]])
+    # --- Charts ---
+    if "AILevel" in df.columns:
+        fig1 = px.pie(df, names="AILevel", title="Knowledge Level of AI 🤖", color_discrete_sequence=px.colors.sequential.Tealrose)
+        st.plotly_chart(fig1, use_container_width=True)
 
-# -------------------------
-# شارت دائري لمستوى معرفة AI
-# -------------------------
-st.subheader("نسبة المشاركين حسب مستوى المعرفة بالذكاء الاصطناعي")
-fig_ai = px.pie(df, names="AI_Level_EN", title="AI Knowledge Level Distribution",
-                color="AI_Level_EN", color_discrete_sequence=px.colors.qualitative.Set2)
-st.plotly_chart(fig_ai, use_container_width=True)
+    if "ProjectChoice" in df.columns:
+        fig2 = px.pie(df, names="ProjectChoice", title="Most Preferred Project 📌", color_discrete_sequence=px.colors.sequential.Viridis)
+        st.plotly_chart(fig2, use_container_width=True)
+else:
+    st.warning("No data available yet. Please fill the Google Form responses first!")
 
-# -------------------------
-# شارت دائري لاختيار المشروع
-# -------------------------
-st.subheader("نسبة المشاركين حسب المشروع الذي يرغبون بتطبيقه")
-fig_proj = px.pie(df, names="ProjectChoice_EN", title="Project Choice Distribution",
-                  color="ProjectChoice_EN", color_discrete_sequence=px.colors.qualitative.Set3)
-st.plotly_chart(fig_proj, use_container_width=True)
-
-# -------------------------
-# إحصائيات سريعة
-# -------------------------
-st.subheader("إحصائيات سريعة")
-st.write(f"أكثر مستوى AI شيوعاً: {df['AI_Level_EN'].mode()[0] if not df.empty else 'No data'}")
-st.write(f"أكثر مشروع اختياراً: {df['ProjectChoice_EN'].mode()[0] if not df.empty else 'No data'}")
-st.write(f"عدد الإجابات: {len(df)}")
 
 
 
