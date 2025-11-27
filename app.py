@@ -43,19 +43,6 @@ df["Project_EN"] = df["ProjectChoice"].map(project_mapping)
 st.sidebar.header("Summary")
 st.sidebar.write(f"Total Responses: {len(df)}")
 
-# ---------- Pie Chart لمستوى AI ----------
-if not df.empty:
-    fig_ai = px.pie(
-        df,
-        names="AI_Level_EN",
-        title="AI Knowledge Level Distribution",
-        color_discrete_sequence=['#2ca02c','#ff7f0e','#1f77b4'],
-        hole=0.4
-    )
-    fig_ai.update_traces(textposition='inside', textinfo='percent+label', pull=[0.05]*len(df["AI_Level_EN"].unique()))
-    st.plotly_chart(fig_ai, use_container_width=True)
-else:
-    st.warning("No AILevel data available!")
 
 # ---------- Pie Chart لمستوى AI ----------
 if not df.empty:
@@ -103,6 +90,7 @@ if not df.empty:
     st.dataframe(df[["AILevel", "AI_Level_EN", "ProjectChoice", "Project_EN"]])
 else:
     st.info("No responses yet.")
+
 
 
 
