@@ -1,74 +1,99 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
+import plotly.express as px
 
-st.set_page_config(page_title="AI Workshop Dashboard", layout="wide")
+# -------------------------------------------
+# 1) تحميل البيانات من Google Sheet
+# -------------------------------------------
+sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
+df = pd.read_csv(sheet_url)
 
-# Google Sheet CSV
-csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
+# -------------------------------------------
+# 2) تأكيد أسماء الأعمدة كما في الشيت
+# -------------------------------------------
+AI_COL = "AILevel"
+PROJECT_COL = "ProjectChoice"
 
-df = pd.read_csv(csv_url)
+# -------------------------------------------
+# 3) تنسيقات الواجهة
+# -------------------------------------------
+st.set_page_config(page_title="AI Dashboard", page_icon="🤖", layout="wide")
 
-st.title("AI Workshop Dashboard")
+st.markdown("""
+    <h1 style='text-align:center; color:#4A90E2;'>📊 لوحة تحليل إجابات الذكاء الاصطناعي</h1>
+    <p style='text-align:center;'>تحليل فوري لنتائج النموذج من Google Sheet</p>
+""", unsafe_allow_html=True)
 
-# -----------------------------
-# 1) عرض البيانات
-# -----------------------------
-st.subheader("Raw Data")
-st.dataframe(df)
+st.write("---")
 
-# -----------------------------
-# 2) تحويل قيم AILevel إلى إنجليزي
-# -----------------------------
-mapping_ai = {
-    "بسيطة": "Basic",
-    "متوسطة": "Intermediate",
-    "متقدمة": "Advanced"
-}
+# -------------------------------------------
+# 4) عرض البيانات الخام
+# -------------------------------------------
+with st.expander("📄 عرض البيانات"):
+    st.dataframe(df)
 
-# إذا القيم عربي → ترجم
-df["AI_Level_EN"] = df["AILevel"].map(mapping_ai)
+st.write("---")
 
-# -----------------------------
-# 3) شارت مستوى الذكاء الاصطناعي
-# -----------------------------
-st.subheader("AI Knowledge Level Distribution")
+# -------------------------------------------
+# 5) إحصائيات أساسية
+# -------------------------------------------
+col1, col2 = st.columns(2)
 
-if df["AI_Level_EN"].notna().sum() > 0:
-    ai_chart = (
-        alt.Chart(df)
-        .mark_bar()
-        .encode(
-            x=alt.X("AI_Level_EN:N", title="AI Knowledge Level"),
-            y=alt.Y("count()", title="Number of Participants"),
-            color="AI_Level_EN:N"
-        )
-        .properties(height=400)
-    )
-    st.altair_chart(ai_chart, use_container_width=True)
+with col1:
+    most_ai = df[AI_COL].mode()[0] if not df.empty else "لا يوجد بيانات"
+    st.metric("أكثر مستوى ذكاء مكرر", most_ai)
+
+with col2:
+    most_proj = df[PROJECT_COL].mode()[0] if not df.empty else "لا يوجد بيانات"
+    st.metric("أكثر مشروع مختار", most_proj)
+
+st.write("---")
+
+# -------------------------------------------
+# 6) الرسم الدائري Pie Chart (النسب)
+# -------------------------------------------
+st.markdown("## 🔵 نسبة اختيار المشاريع")
+
+if df.empty:
+    st.warning("لا يوجد بيانات لعرض الرسم البياني.")
 else:
-    st.write("No AI Level data available.")
+    proj_counts = df[PROJECT_COL].value_counts().reset_index()
+    proj_counts.columns = ["Project", "Count"]
 
-# -----------------------------
-# 4) شارت اختيار المشروع
-# -----------------------------
-st.subheader("Most Selected Project")
-
-if df["ProjectChoice"].notna().sum() > 0:
-    project_chart = (
-        alt.Chart(df)
-        .mark_bar()
-        .encode(
-            x=alt.X("ProjectChoice:N", title="Project Type"),
-            y=alt.Y("count()", title="Number of Votes"),
-            color="ProjectChoice:N"
-        )
-        .properties(height=400)
+    fig = px.pie(
+        proj_counts,
+        names="Project",
+        values="Count",
+        title="نسبة اختيار كل مشروع",
+        hole=0.35
     )
-    st.altair_chart(project_chart, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
 
-    # إظهار الأكثر اختياراً
-    st.write(f"Most chosen project: **{df['ProjectChoice'].mode()[0]}**")
-else:
-    st.write("No project choice data available.")
+st.write("---")
+
+# -------------------------------------------
+# 7) الرسم الدائري لمستويات AI
+# -------------------------------------------
+st.markdown("## 🤖 توزيع مستوى الذكاء الاصطناعي")
+
+if not df.empty:
+    ai_counts = df[AI_COL].value_counts().reset_index()
+    ai_counts.columns = ["AI_Level", "Count"]
+
+    fig2 = px.pie(
+        ai_counts,
+        names="AI_Level",
+        values="Count",
+        title="نسبة تكرار مستويات الذكاء"
+    )
+    st.plotly_chart(fig2, use_container_width=True)
+
+st.write("---")
+
+st.markdown("""
+    <p style='text-align:center; color:gray; margin-top:20px;'>
+        تم التطوير بواسطة ChatGPT 🧡
+    </p>
+""", unsafe_allow_html=True)
+
 
