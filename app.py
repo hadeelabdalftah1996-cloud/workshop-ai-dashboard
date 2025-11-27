@@ -22,7 +22,8 @@ st.markdown(
 st.markdown("---")
 
 # ------------------------  LOAD DATA  ------------------------
-sheet_url = "YOUR_SHEET_URL_HERE"   # <<< ضعي رابط الشيت هنا
+sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeUXVi-EbjECbsrtKKSE4kjFsg5sUi-s0Ezj8PdyWL0yw4DxeNjVVEYPAuJBj00B0KYVqgoRO1TuPD/pub?output=csv"
+   # <<< ضعي رابط الشيت هنا
 df = pd.read_csv(sheet_url)
 
 # ------------------------  EMOJI MAPPING  ------------------------
@@ -115,6 +116,7 @@ st.markdown(
     "<p style='text-align:center; color:#6B7280;'>Dashboard by SEPCO © 2025</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
