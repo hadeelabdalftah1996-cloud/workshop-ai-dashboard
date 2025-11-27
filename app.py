@@ -30,7 +30,7 @@ df["AI_Level_EN"] = df["AILevel"].map(mapping_ai)
 
 # ---------- Mapping المشاريع مع إيموجي ----------
 project_mapping = {
-    "كتابة وتحديث إجراءات التشغيل sop": "Writing & Updating SOP 📝",
+    "كتابة وتحديث إجراءات التشغيل SOP": "Writing & Updating SOP 📝",
     "تحليل وبناء ال FMEA": "FMEA Analysis 📊",
     "تحليل الأعطال والتوقفات القسرية": "Failure & Downtime Analysis ⚡",
     "مساعد للمشغل والمهندس": "Ops & Maintenance Copilot 🤖",
@@ -78,6 +78,7 @@ if not df.empty:
     st.dataframe(df[["AILevel", "AI_Level_EN", "ProjectChoice", "Project_EN"]])
 else:
     st.info("No responses yet.")
+
 
 
 
