@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+st.image("logo.jpg", width=200)
+
 
 # -------------------------------------------
 # 1) تحميل البيانات من Google Sheet
@@ -95,5 +97,6 @@ st.markdown("""
         تم التطوير بواسطة ChatGPT 🧡
     </p>
 """, unsafe_allow_html=True)
+
 
 
