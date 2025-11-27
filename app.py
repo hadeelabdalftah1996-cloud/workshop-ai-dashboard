@@ -59,6 +59,11 @@ if not df.empty:
         pull=[0.05]*len(df["AI_Level_EN"].unique()),
         textfont_size=20   # <<-- هنا حطينا حجم الخط
     )
+    fig_ai.update_layout(
+    legend=dict(
+        font=dict(size=18)   # هذا يكبر الخط جنب الشارت
+    )
+)
     st.plotly_chart(fig_ai, use_container_width=True)
 else:
     st.warning("No AILevel data available!")
@@ -79,6 +84,11 @@ if not df.empty:
         pull=[0.05]*len(project_counts),
         textfont_size=20   # <<-- هنا كمان حجم الخط
     )
+    fig_proj.update_layout(
+    legend=dict(
+        font=dict(size=18)
+    )
+)
     st.plotly_chart(fig_proj, use_container_width=True)
 else:
     st.warning("No ProjectChoice data available!")
@@ -90,6 +100,7 @@ if not df.empty:
     st.dataframe(df[["AILevel", "AI_Level_EN", "ProjectChoice", "Project_EN"]])
 else:
     st.info("No responses yet.")
+
 
 
 
